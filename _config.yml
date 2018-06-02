@@ -16,11 +16,11 @@
 theme: jekyll-theme-so-simple
 # remote_theme: mmistakes/so-simple-theme
 locale: en-US
-title: "My Awesome Site"
-description: "It really is the best."
+title: "Berhing's Blogs"
+description: "“Challenges are what make life interesting and overcoming them is what makes life meaningful.”"
 baseurl: # the subpath of your site, e.g. "/blog"
 url: # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
-logo: # path of site logo, e.g. "/images/logo.png"
+logo: "/assets/images/logo.png" # path of site logo, e.g. "/images/logo.png"
 date_format: "%B %-d, %Y"
 read_time: # reading time estimates, e.g. true
 words_per_minute: # 200
@@ -87,17 +87,20 @@ defaults:
 
 # Site Author
 author:
-  name:
-  picture:
-  email:
+  name: behring
+  picture: "/assets/images/avatar.jpeg"
+  email: behring.zhao@gmail.com
   twitter:
-  links:
-    - title:
-      url:
-      icon:
+#  links:
+#    - title: github
+#      url: https://github.com/behring
+#      icon: fab fa-github-square
+#    - title: 简书
+#      url: https://www.jianshu.com/u/bf87eb460bda
+#      icon: fas fa-book
 
 # Footer Links
 footer_links:
-  - title: Feed
-    url: atom.xml
-    icon: fas fa-rss-square
+  - title: Mail
+    url: mailto:behring.zhao@gmail.com
+    icon: far fa-envelope
