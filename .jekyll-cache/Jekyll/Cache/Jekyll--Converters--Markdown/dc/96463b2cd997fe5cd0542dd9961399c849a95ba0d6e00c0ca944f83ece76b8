@@ -1,0 +1,21 @@
+I"a<h1 id="解压apk">解压apk</h1>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apktool d xxx.apk <span class="nt">-o</span> <span class="nb">dirname</span>
+</code></pre></div></div>
+<blockquote>
+  <p>apktool<a href="https://ibotpeaches.github.io/Apktool/install/">下载地址</a></p>
+</blockquote>
+
+<h1 id="修改smali文件">修改smali文件</h1>
+<p>Android虚拟机Dalvik并不是执行java虚拟机JVM编译后生成的class文件，而是执行再重新整合打包后生成的dex文件，dex文件反编译之后就是smali代码，可以说，smali语言是Dalvik的反汇编语言。</p>
+
+<h1 id="重新打包apk">重新打包apk</h1>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apktool b <span class="nb">dirname</span> <span class="nt">-o</span> xxx-new.apk
+</code></pre></div></div>
+
+<h1 id="重新给apk签名">重新给apk签名</h1>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>jarsigner <span class="nt">-verbose</span> <span class="nt">-keystore</span> ~/.android/debug.keystore <span class="nt">-signedjar</span> app-signed.apk app-new.apk androiddebugkey
+</code></pre></div></div>
+<blockquote>
+  <p>android默认的debug.keystore的密码是android，androiddebugkey为keystore的alias。</p>
+</blockquote>
+:ET
