@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/blog/img/favicon.ico">
+
+    <title>隐式启动activity - Behring的博客 | Behring Blog</title>
+
+    <link rel="canonical" href="http://0.0.0.0:4000/blog/2018/06/05/%E9%9A%90%E5%BC%8F%E5%90%AF%E5%8A%A8activity/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/blog/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/blog/css/hux-blog.min.css">
+
+    <!-- Pygments Github CSS -->
+    <link rel="stylesheet" href="/blog/css/syntax.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="http://cdn.staticfile.org/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/blog/">Behring Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/blog/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/blog/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/blog/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/blog/img/post-bg-js-version.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        background-image: url('/blog/img/post-bg-js-version.jpg')
+    }
+</style>
+<header class="intro-header" >
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/blog/tags/#Android" title="Android">Android</a>
+                        
+                    </div>
+                    <h1>隐式启动activity</h1>
+                    
+                    
+                    <h2 class="subheading"></h2>
+                    
+                    <span class="meta">Posted by Behring on June 5, 2018</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+				<h1 id="隐式intent启动activity">隐式Intent启动Activity</h1>
+
+<h2 id="前言">前言</h2>
+
+<p>我们在开发一个app时，最常用到的是通过Intent设置组件类名，然后启动相应的Activity。这种<strong>通过为Intent指定组件名称</strong>启动Activity的方式，我们称之为<strong>显示Intent启动Activity</strong>。举个例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">explicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="c1">//通过类启动(一般用于同一个应用)</span>
+<span class="n">explicitIntent</span><span class="o">.</span><span class="na">setClass</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="nc">MainActivity</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="c1">//通过ComponentName类启动(一般用于同一组织开发的同一个或不同应用)</span>
+<span class="n">explicitIntent</span><span class="o">.</span><span class="na">setComponent</span><span class="o">(</span><span class="k">new</span> <span class="nc">ComponentName</span><span class="o">((</span><span class="s">"com.thoughtworks.demo"</span><span class="o">,</span><span class="s">"com.thoughtworks.demo.MainActivity"</span><span class="o">));</span>
+<span class="c1">//通过包名+完整类名启动(ComponentName类启动的一种简写调用)</span>
+<span class="n">explicitIntent</span><span class="o">.</span><span class="na">setClassName</span><span class="o">(</span><span class="s">"com.thoughtworks.demo"</span><span class="o">,</span><span class="s">"com.thoughtworks.demo.MainActivity"</span><span class="o">);</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">explicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>因为显示Intent启动Activity需要知道具体的类名包名，所以常用于同一个应用内，或者同一个组织开发的不同应用间。</p>
+
+<h2 id="正文">正文</h2>
+
+<p>在了解了显示Intent启动后，我们来说下今天的主题，隐式Intent启动Activity。</p>
+
+<h3 id="什么是隐式intent启动activity">什么是隐式Intent启动Activity？</h3>
+
+<p>通过设置Intent的action、category和data来启动Actvity的方式就是隐式Intent启动。举个例子：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">implicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setAction</span><span class="o">(</span><span class="s">"com.thoughtworks.demo.itent.action.EDIT_IMAGE"</span><span class="o">);</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setData</span><span class="o">(</span><span class="nc">Uri</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">" content://com.thoughtworks.provider.userprovider/user/1?image=avatar"</span><span class="o">));</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">implicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h3 id="隐式intent启动的是哪个activity">隐式Intent启动的是哪个Activity？</h3>
+
+<p>具体此Intent能启动哪个Activity，需要看Activity在<strong><em>AndroidManifest.xml</em></strong>中的配置。下面给出一个配置，来具体分析隐式Intent启动Activity。</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"content"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"com.thoughtworks.provider.userprovider"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/user/.*"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>要<strong><em>隐式Itent启动MainActivity</em></strong>必须满足如下条件：</p>
+
+<ul>
+  <li>
+    <p><strong><em>Intent-filter</em></strong>内必须<strong><em>至少包含一个category</em></strong>，<strong><em>android:name</em></strong>为<strong><em>android.intent.category.DEFAULT</em></strong>。</p>
+  </li>
+  <li>
+    <p><strong><em>Intent-filter</em></strong>内必须<strong><em>至少包含一个action</em></strong>。</p>
+
+    <blockquote>
+      <p>intent内是否需要setAction根据setData中Uri的scheme决定（如果Uri的scheme为http, https, content等，这时候不指定intent的action，系统或者其他应用会尝试启动自己可以匹配的组件），为了能准确启动需要的组件，请在intent中调用setAction。</p>
+    </blockquote>
+  </li>
+</ul>
+
+<p>所以，只要一个Activity的Manifest配置满足上面2个条件，那么这个Activity一定是可以被隐式启动的。至于怎么启动，这就需要结合Intent内设置的action、category、data和AndroidManifest文件中Activity的intent-filter的匹配规则决定了。</p>
+
+<p>是不是感觉好麻烦？要不你也不会看到这篇文章，下来我就说下intent-filter的匹配规则，其实很简单。</p>
+
+<h3 id="intent-filter的作用和特点">intent-filter的作用和特点</h3>
+
+<p>看名字就知道intent-filter的作用当然就是用来过滤intent的了，本质目的就是为了确定哪个intent可以和当前的组件匹配，如果匹配就启动它。所以<strong><em>intent-filter的作用就是为了隐式启动组件</em></strong>。</p>
+
+<p>而<strong><em>intent-filter的特点有3个</em></strong>，如下:</p>
+
+<ol>
+  <li>
+    <p>一个组件内可以有多组intent-filter标签。</p>
+  </li>
+  <li>
+    <p>只要intent内的信息和任意一组intent-filter匹配，那么就可以启动这个组件。</p>
+  </li>
+  <li>
+    <p>一组intent-filter内可以多个action、category、data。</p>
+
+    <blockquote>
+      <p>一般情况不会将多个action、category、data同时写在一组intent-filter标签内，而是会根据具体action，拆分为多组intent-filter。</p>
+    </blockquote>
+  </li>
+</ol>
+
+<h3 id="intent-filter的匹配">intent-filter的匹配</h3>
+
+<p>还是举个例子：</p>
+
+<p>intent信息：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">implicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setAction</span><span class="o">(</span><span class="s">"com.thoughtworks.demo.itent.action.EDIT_IMAGE"</span><span class="o">);</span>
+<span class="c1">//implicitIntent.setAction("com.thoughtworks.demo.itent.action.SHOW_IMAGE");</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">implicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>implicitIntent只能有一个action(看名字就是知道setAction嘛)，这个action不管是SHOW_IMAGE还是EDIT_IMAGE都会启动MainActivity。</p>
+
+<p>下面我们修改下intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>效果和之前的intent-filter完全一样。如果MainActivity只能负责show和edit用户的图片。我们要怎么办？我们再修改下intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"content"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"com.thoughtworks.provider.userprovider"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/user/.*"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>所以要启动MainActivity，intent信息如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">implicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setAction</span><span class="o">(</span><span class="s">"com.thoughtworks.demo.itent.action.EDIT_IMAGE"</span><span class="o">);</span>
+<span class="c1">//implicitIntent.setAction("com.thoughtworks.demo.itent.action.SHOW_IMAGE");</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setData</span><span class="o">(</span><span class="nc">Uri</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">" content://com.thoughtworks.provider.userprovider/user/1?image=avatar"</span><span class="o">));</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">implicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>在MainActivity中通过getData获取contentProvider的Uri地址查询user信息，在通过Uri中的query获取avatar图片完成show或edit操作。</p>
+
+<blockquote>
+  <p>如果intent中的data不能和intent-filter中data的规则匹配，是无法启动组件的。</p>
+</blockquote>
+
+<p>如果需求在复杂一点，MainActivity不仅仅可以对ContentProvider中user的图片做处理，还可以对指定域名下的网络图片做处理。我们要怎么办？我们继续修改intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"content"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"com.thoughtworks.provider.userprovider"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/user/.*"</span> <span class="nt">/&gt;</span>
+        
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"http"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"lovemumu.cn"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/assets/images/hero/.*\\.jpg"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>intent信息为：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">implicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setAction</span><span class="o">(</span><span class="s">"com.thoughtworks.demo.itent.action.EDIT_IMAGE"</span><span class="o">);</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setData</span><span class="o">(</span><span class="nc">Uri</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">"http://lovemumu.cn/assets/images/hero/Geirangerfjord-Norway.jpg"</span><span class="o">));</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">implicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>上面的intent一样可以启动MainActivity。But！！有一个问题，如果我们把intent中的data设置为：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">implicitIntent</span><span class="o">.</span><span class="na">setData</span><span class="o">(</span><span class="nc">Uri</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="s">"content://lovemumu.cn/user/1?image=avatar"</span><span class="o">));</span>
+</code></pre></div></div>
+
+<p>会发生什么？我操，既然也打开了MainActivity。这显然不是我们想要的。所以此时我们应该拆分intent-filter，代码如下：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>     
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"http"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"lovemumu.cn"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/assets/images/hero/.*\\.jpg"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.SHOW_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"com.thoughtworks.demo.intent.action.EDIT_IMAGE"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span> 
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"http"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"lovemumu.cn"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPattern=</span><span class="s">"/assets/images/hero/.*\\.jpg"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>说了这么多，大家有木有发现，我们仅仅只提到过一次category，即：Intent-filter内必须至少包含一个category<strong><em>，</em></strong>android:name为android.intent.category.DEFAULT。</p>
+
+<p>呢到底category重要吗？看下官网的解释：</p>
+
+<blockquote>
+  <p>A string containing additional information about the kind of component that should handle the intent. Any number of category descriptions can be placed in an intent,<strong><em>but most intents do not require a category.</em></strong></p>
+</blockquote>
+
+<p>大多数情况是不需要catagory的。好吧，看来用的时候不多。但是我们还是要简单说说它。</p>
+
+<p>category在intent-filter内可以配置多个。如果intent内有category，那么这些categories都必须包含在intent-filter内，否则无法隐式启动组件。如果intent内没有任何category，只要其他规则匹配（action，data），就可以启动组件。</p>
+
+<h4 id="intent-filter匹配规则总结">intent-filter匹配规则总结</h4>
+
+<p>以下规则中intent-filter都必须包含<code class="language-plaintext highlighter-rouge">&lt;category android:name="android.intent.category.DEFAULT" /&gt;</code>。</p>
+
+<ol>
+  <li>如果intent-filter内只有action(单个或多个)，只要intent内的action和intent-filter内任意一个action匹配，即可启动组件。</li>
+  <li>如果intent-filter内有action和category(单个或多个),满足规则1的条件下，只要intent内的categories都属于intent-filter，即可启动组件。</li>
+  <li>如果intent-filter内有action、category、data(单个或多个),满足规则1，2的条件下，只要intent内的data和intent-filter内的规则匹配，即可启动组件。</li>
+</ol>
+
+<h3 id="关于actioncategorydata的理解">关于action、category、data的理解</h3>
+
+<p><strong><em>action：</em></strong>对于intent，action表示你期望完成什么操作。而对于组件，intent-filter内的action表示你的组件具有什么样的能力。例如：如果你的activity的intent-filter配置了android.intent.action.SEND的action，表示你的activity具有处理SEND的能力。SEND的是什么，可以根据data的mineType指定。而Inent的setAction设置了android.intent.action.SEND，表示你希望去SEND一个消息，具体是发送什么消息（文本，图片，音视频），通过intent的setType指定。而谁会去真的帮你SEND，那就要看哪些应用的组件配置了对应的action和data。其实android.intent.action.SEND是系统的action。很多第三方应用<strong><em>想要共享自己应用的能力</em></strong>，他们可以通过公开文档的形式告诉你action，但是大多数是直接使用系统的action。举个例子：</p>
+
+<p>intent信息为：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Intent</span> <span class="n">implicitIntent</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Intent</span><span class="o">();</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setAction</span><span class="o">(</span><span class="s">"android.intent.action.SEND"</span><span class="o">);</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">putExtra</span><span class="o">(</span><span class="nc">Intent</span><span class="o">.</span><span class="na">EXTRA_TEXT</span><span class="o">,</span> <span class="s">"I am Twer~"</span><span class="o">);</span>
+<span class="n">implicitIntent</span><span class="o">.</span><span class="na">setType</span><span class="o">(</span><span class="s">"text/plain"</span><span class="o">);</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">implicitIntent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"android.intent.action.SEND"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:mimeType=</span><span class="s">"text/plain"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>此时系统会弹出应用或组件选择器，因为很多应用的组件都匹配到了你intent。例如微信会帮你SEND信息到好友或者群聊在或者朋友圈，邮件会帮你SEND信息到发送页面，百度会帮你SEND到搜索结果页面，等等。</p>
+
+<p><strong><em>category：</em></strong>虽然说他不是很重要，但是它也有自己的应用场景。最常用的2个系统category如下：
+<code class="language-plaintext highlighter-rouge">&lt;category android:name="android.intent.category.LAUNCHER" /&gt;</code>和
+<code class="language-plaintext highlighter-rouge">&lt;category android:name="android.intent.category.BROWSABLE"/&gt;</code></p>
+
+<p>LAUNCHER：这个不用多说，我们的项目的入口Activity都必须有的配置。它表示该 Activity 是任务的初始 Activity，在系统的桌面列出图标。</p>
+
+<p>BROWSABLE：表示该 Activity 允许自身通过网络浏览器启动。举个例子：</p>
+
+<p>intent-filter信息：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MainActivity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;intent-filter&gt;</span>
+		<span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"android.intent.action.VIEW"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.BROWSABLE"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"app"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:host=</span><span class="s">"thoughtworks"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;data</span> <span class="na">android:pathPrefix=</span><span class="s">"/behring"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/intent-filter&gt;</span>
+<span class="nt">&lt;/activity&gt;</span>
+</code></pre></div></div>
+
+<p>此时你在手机浏览器访问连接<a href="app://thoughtworks/behring">app://thoughtworks/behring</a> 就可以拉起App的MainActivity。</p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">android.intent.category.BROWSABLE</code>必须配合<code class="language-plaintext highlighter-rouge">android.intent.action.VIEW</code>还有<code class="language-plaintext highlighter-rouge">data</code>一起使用。</p>
+</blockquote>
+
+<p><strong><em>data：</em></strong>主要是用来传递Uri类型的数据，可以通过?key=value&amp;key=value的形式传递参数。包含的属性有<code class="language-plaintext highlighter-rouge">scheme</code>、<code class="language-plaintext highlighter-rouge">host</code>、<code class="language-plaintext highlighter-rouge">port</code>、<code class="language-plaintext highlighter-rouge">path</code>、<code class="language-plaintext highlighter-rouge">mimeType</code>、<code class="language-plaintext highlighter-rouge">pathPrefix</code>、<code class="language-plaintext highlighter-rouge">pathPattern</code>。</p>
+
+<p>对应内容如下图：</p>
+
+<p><img src="/assets/images/post/intent-filter-data.png" alt="" /></p>
+
+<p>详细内容请<a href="https://developer.android.com/guide/topics/manifest/data-element">参考</a>。</p>
+
+<blockquote>
+  <p>需要注意的是，若要同时给intent设置 URI 和 MIME 类型，<strong>请勿</strong>调用 <code class="language-plaintext highlighter-rouge">setData()</code> 和 <code class="language-plaintext highlighter-rouge">setType()</code>，因为它们会互相抵消彼此的值。请始终使用 <code class="language-plaintext highlighter-rouge">setDataAndType()</code> 同时设置 URI 和 MIME 类型。</p>
+</blockquote>
+
+<h2 id="总结">总结</h2>
+
+<p>了解了上面的知识后，我有2个问题。</p>
+
+<ol>
+  <li>
+    <p>什么时候使用隐式Intent启动组件？</p>
+
+    <p>当你需要调用其他应用的能力,包括系统能力和第三方应用能力。例如：调用拨号盘，调用微信分享，调用美图秀秀处理图片等等。</p>
+  </li>
+  <li>
+    <p>什么时候配置自己的组件支持隐式启动？</p>
+
+    <p>需要对外暴露自己组件的能力。例如：京东和淘宝提供”拍立得“接口，可以直接调用他们的该组件完成图片搜索购物。</p>
+  </li>
+</ol>
+
+
+
+                <hr>
+
+                
+                <!-- 多说 Share start -->
+                </style>
+                <!-- <div class="ds-share"
+                    style="text-align: right"
+                    data-thread-key="/2018/06/05/隐式启动activity"
+                    data-title="隐式启动activity"
+                    data-url="http://0.0.0.0:4000/blog/2018/06/05/%E9%9A%90%E5%BC%8F%E5%90%AF%E5%8A%A8activity/"
+                    data-images="http://0.0.0.0:4000/blog/img/post-bg-js-version.jpg"
+                    data-content="隐式Intent启动Activity
+
+前言
+
+我们在开发一个app时，最常用到的是通过Intent设置组件类名，然后启动相应的Activity。这种通过... | Behring的博客 | Behring Blog " >
+                    <div class="ds-share-inline">
+                      <ul  class="ds-share-icons-16">
+                        <li data-toggle="ds-share-icons-more"><a class="ds-more" href="#">分享到：</a></li>
+                        <li><a class="ds-wechat flat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+                        <li><a class="ds-weibo flat" href="javascript:void(0);" data-service="weibo">微博</a></li>
+                        <li><a class="ds-douban flat" href="javascript:void(0);" data-service="douban">豆瓣</a></li>
+                      </ul>
+                      <div class="ds-share-icons-more">
+                      </div>
+                    </div>
+                <hr>
+                </div> -->
+                <!-- 多说 Share end-->
+                
+
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/blog/2018/06/02/%E4%BF%AE%E6%94%B9apk%E4%BB%A3%E7%A0%81%E5%90%8E%E9%87%8D%E6%96%B0%E7%BC%96%E8%AF%91%E6%89%93%E5%8C%85/" data-toggle="tooltip" data-placement="top" title="修改apk代码后重新编译打包">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/blog/2018/06/08/gradle%E8%8E%B7%E5%8F%96%E4%BE%9D%E8%B5%96%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/" data-toggle="tooltip" data-placement="top" title="gradle获取依赖失败问题">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+
+                
+                <!-- 多说评论框 start -->
+                <div class="comment">
+                    <div class="ds-thread"
+                        data-thread-key="/2018/06/05/隐式启动activity"
+                        data-title="隐式启动activity"
+                        data-url="http://0.0.0.0:4000/blog/2018/06/05/%E9%9A%90%E5%BC%8F%E5%90%AF%E5%8A%A8activity/" >
+                    </div>
+                </div>
+                <!-- 多说评论框 end -->
+                
+
+                
+
+            </div>
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+        				
+                            
+                				<a href="/blog/tags/#Android" title="Android" rel="3">
+                                    Android
+                                </a>
+                            
+        				
+                            
+        				
+        			</div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    // dynamic User by Hux
+    var _user = 'huxblog';
+
+    // duoshuo comment query.
+    var duoshuoQuery = {short_name: _user };
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0]
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+</script>
+<!-- 多说公共JS代码 end -->
+
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("http://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'always',
+          placement: 'right',
+          icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+
+
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; Behring Blog 2021
+                    <br>
+                    Theme by <a href="http://huangxuan.me">Hux</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="91px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=huxpro&repo=huxpro.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/blog/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/blog/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/blog/js/hux-blog.min.js "></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/    
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("http://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-49627206-1';
+    var _gaDomain = 'behring.tech';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+<script>
+    // dynamic User by Hux
+    var _baId = '4cc1f2d8f3067386cc5cdb626a202900';
+
+    // Originial
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
