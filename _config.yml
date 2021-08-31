@@ -8,7 +8,7 @@ keyword: ""
 host: 0.0.0.0
 port: 4000
 url: "http://behring.tech"              # your host, for absolute URL
-baseurl: "/blog"         # for example, '/blog' if your blog hosted on 'host/blog'
+baseurl: "/"         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
 
